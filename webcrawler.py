@@ -58,7 +58,7 @@ def collate():
     # write results
     keywords = read_keywords()
     with open(RANKED_OUTPUT_FILE, 'w') as fd:
-        writer = DictWriter(fd, fieldnames=['url', 'title', *keywords])
+        writer = DictWriter(fd, fieldnames=['url', 'title', 'keywords'])
         writer.writeheader()
         for url in ranked_urls:
             writer.writerow({

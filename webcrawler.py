@@ -15,7 +15,7 @@ RANKED_OUTPUT_FILE = 'output.csv'
 
 def contains_date(url):
     """Returns True if the url contains a date."""
-    result= re.search(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url); return bool(result)
+    return bool(re.search(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url))
 
 class EconomistSpider(scrapy.Spider):
 

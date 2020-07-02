@@ -15,8 +15,7 @@ RANKED_OUTPUT_FILE = 'output.csv'
 
 def contains_date(url):
     """Returns True if the url contains a date."""
-    result= re.search(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url)
-    return bool(result)
+    result= re.search(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url); return bool(result)
 
 class EconomistSpider(scrapy.Spider):
 
@@ -58,7 +57,7 @@ def collate():
         results = json.load(fd)
     for result in results:
         url = result['Link']
-        if (contains_date(url)):
+        if contains_date(url):
             result_keywords[url].add(result['word'])
             result_titles[url] = result['title']
     # sort results by the number of keywords matched

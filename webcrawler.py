@@ -5,11 +5,18 @@ from csv import DictWriter
 import scrapy
 from scrapy.crawler import CrawlerProcess
 from scrapy.http.request import Request
+import re
+
 
 KEYWORDS_FILE = 'textfile.txt'
 SCRAPY_OUTPUT_FILE = 'scrapy-output.json'
 RANKED_OUTPUT_FILE = 'output.csv'
 
+
+def contains_date(url):
+    """Returns True if the url contains a date."""
+    result= re.search(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url)
+    return bool(result)
 
 class EconomistSpider(scrapy.Spider):
 
@@ -51,8 +58,9 @@ def collate():
         results = json.load(fd)
     for result in results:
         url = result['Link']
-        result_keywords[url].add(result['word'])
-        result_titles[url] = result['title']
+        if (contains_date(url)):
+            result_keywords[url].add(result['word'])
+            result_titles[url] = result['title']
     # sort results by the number of keywords matched
     ranked_urls = sorted(result_keywords, key=(lambda url: len(result_keywords[url])), reverse=True)
     # write results

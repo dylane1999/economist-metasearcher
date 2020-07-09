@@ -32,9 +32,11 @@ class EconomistSpider(scrapy.Spider):
             word = word.replace('&page', '')
         # yield info requested
         for result in response.css('ol.layout-search-results li'):
+            title = result.xpath('string(.//a/h2/span[2])').get()
+            if title == '': title = result.xpath('string(.//a/h2/span)').get();
             yield {
                 'Link': result.css('li a.search-result::attr(href)').get(),
-                'title': result.css('span.search-result__headline::text').get(),
+                'title': title,
                 'word': word,
             }
         # follow to the next page of that search term

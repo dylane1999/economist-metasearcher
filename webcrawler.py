@@ -6,6 +6,7 @@ import scrapy
 from scrapy.crawler import CrawlerProcess
 from scrapy.http.request import Request
 import re
+import urllib.request, urllib.error, urllib.parse
 
 
 KEYWORDS_FILE = 'textfile.txt'
@@ -33,7 +34,7 @@ class EconomistSpider(scrapy.Spider):
         # yield info requested
         for result in response.css('ol.layout-search-results li'):
             title = result.xpath('string(.//a/h2/span[2])').get()
-            if (title == ''):
+            if title == '':
                 title = result.xpath('string(.//a/h2/span)').get();
             yield {
                 'Link': result.css('li a.search-result::attr(href)').get(),
@@ -76,6 +77,21 @@ def collate():
                 'title': result_titles[url],
                 'keywords': str(', '.join(sorted(result_keywords[url]))),
             })
+            download(url)
+
+
+
+def download(url):
+
+    if url.find('/'):
+        name = url.rsplit('/', 1)[1]
+
+    response = urllib.request.urlopen(url)
+    webContent = response.read()
+
+    f = open(name + ".html", 'wb')
+    f.write(webContent)
+    f.close
 
 
 def main():

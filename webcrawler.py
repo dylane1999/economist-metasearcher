@@ -84,14 +84,17 @@ def collate():
 def download(url):
 
     if url.find('/'):
-        name = url.rsplit('/', 1)[1]
+        name = url.rsplit('/', 1)[1] # splits url into an array of strings by '/' with a max of one split and then returns the string at index 1
 
-    response = urllib.request.urlopen(url)
-    webContent = response.read()
+    with urllib.request.urlopen(url) as response:
+        webContent = response.read()
 
-    f = open(name + ".html", 'wb')
-    f.write(webContent)
-    f.close
+
+
+    with open(name + ".html", 'w') as fd:
+        fd = open(name + ".html", 'wb')
+        fd.write(webContent)
+        fd.close
 
 
 def main():

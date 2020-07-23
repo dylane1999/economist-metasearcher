@@ -18,6 +18,10 @@ def contains_date(url):
     """Returns True if the url contains a date."""
     return bool(re.search(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url))
 
+def return_date(url):
+    """Returns the date in a url."""
+    return re.findall(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url)
+
 class EconomistSpider(scrapy.Spider):
 
     name = "economist"
@@ -69,12 +73,14 @@ def collate():
     # write results
     keywords = read_keywords()
     with open(RANKED_OUTPUT_FILE, 'w') as fd:
-        writer = DictWriter(fd, fieldnames=['url', 'title', 'keywords'])
+        writer = DictWriter(fd, fieldnames=['url', 'title', 'date', 'keywords'])
         writer.writeheader()
         for url in ranked_urls:
+            date = return_date(url)
             writer.writerow({
                 'url': url,
                 'title': result_titles[url],
+                'date': date[0],
                 'keywords': str(', '.join(sorted(result_keywords[url]))),
             })
             download(url)

@@ -6,6 +6,9 @@ import scrapy
 from scrapy.crawler import CrawlerProcess
 from scrapy.http.request import Request
 import re
+import urllib.request, urllib.error, urllib.parse
+from datetime import datetime
+
 
 
 KEYWORDS_FILE = 'textfile.txt'
@@ -16,6 +19,15 @@ RANKED_OUTPUT_FILE = 'output.csv'
 def contains_date(url):
     """Returns True if the url contains a date."""
     return bool(re.search(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url))
+
+def extract_date(url):
+    """Returns the date in a url."""
+    result = re.findall(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url)
+    date = result[0]
+    date = ''.join(x for x in date if x not in '()')
+    datetimeobject = datetime.strptime(date, '%Y%m%d')
+    date = datetimeobject.strftime('%m/%d/%Y')
+    return date
 
 class EconomistSpider(scrapy.Spider):
 
@@ -33,7 +45,7 @@ class EconomistSpider(scrapy.Spider):
         # yield info requested
         for result in response.css('ol.layout-search-results li'):
             title = result.xpath('string(.//a/h2/span[2])').get()
-            if (title == ''):
+            if title == '':
                 title = result.xpath('string(.//a/h2/span)').get();
             yield {
                 'Link': result.css('li a.search-result::attr(href)').get(),
@@ -68,14 +80,34 @@ def collate():
     # write results
     keywords = read_keywords()
     with open(RANKED_OUTPUT_FILE, 'w') as fd:
-        writer = DictWriter(fd, fieldnames=['url', 'title', 'keywords'])
+        writer = DictWriter(fd, fieldnames=['url', 'title', 'date', 'keywords'])
         writer.writeheader()
         for url in ranked_urls:
+            date = extract_date(url)
             writer.writerow({
                 'url': url,
                 'title': result_titles[url],
+                'date': date,
                 'keywords': str(', '.join(sorted(result_keywords[url]))),
             })
+            download(url)
+
+
+
+def download(url):
+
+    if url.find('/'):
+        name = url.rsplit('/', 1)[1] # splits url into an array of strings by '/' with a max of one split and then returns the string at index 1
+
+    with urllib.request.urlopen(url) as response:
+        webContent = response.read()
+
+
+
+    with open(name + ".html", 'w') as fd:
+        fd = open(name + ".html", 'wb')
+        fd.write(webContent)
+        fd.close
 
 
 def main():

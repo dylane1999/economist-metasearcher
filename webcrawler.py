@@ -7,6 +7,8 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.http.request import Request
 import re
 import urllib.request, urllib.error, urllib.parse
+from datetime import datetime
+
 
 
 KEYWORDS_FILE = 'textfile.txt'
@@ -20,8 +22,12 @@ def contains_date(url):
 
 def extract_date(url):
     """Returns the date in a url."""
-    result= re.findall(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url)
-    return result[0]
+    result = re.findall(r'/(\d{4})/(\d{1,2})/(\d{1,2})/', url)
+    date = result[0]
+    date = ''.join(x for x in date if x not in '()')
+    datetimeobject = datetime.strptime(date, '%Y%m%d')
+    date = datetimeobject.strftime('%m/%d/%Y')
+    return date
 
 class EconomistSpider(scrapy.Spider):
 
@@ -84,7 +90,7 @@ def collate():
                 'date': date,
                 'keywords': str(', '.join(sorted(result_keywords[url]))),
             })
-        ##    download(url)
+            download(url)
 
 
 

@@ -96,8 +96,11 @@ def selenium_login():
 
         hasNextPage = True
         while hasNextPage:
-            disabledButton = driver.find_elements(By.XPATH, "/html/body/div[4]/div[3]/form/div[3]/div/ul[2]/b[2]")
+            disabledButton = driver.find_elements(By.XPATH, "/html/body/div[4]/div[3]/form/div[3]/div/ul[2]/b")
             enabledButton = driver.find_elements(By.XPATH, '//*[@title="Next"]')
+            print("Length of enabled button" +  str(len(enabledButton)))
+            print("Length of diabled button" +  str(len(disabledButton)))
+
 
             if len(enabledButton) > 0:
                 enabledButton[0].click()

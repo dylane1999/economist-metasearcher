@@ -116,10 +116,41 @@ def selenium_login():
                 collectResults(driver,keyword)
                 break
 
+        # waits for the new rollover download
+        markedWait = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "markListSpan"))
+        )
+
+        # clicks marked items button
+        markedItems = driver.find_element_by_class_name("markListSpan")
+        markedItems.click()
+
+
+        # clicks marked items button
+        download = driver.find_element_by_id("download")
+        download.click()
+
+        currentWindow = driver.current_window_handle
+        downloadPage = driver.window_handles[1]
+        driver.switch_to.window(downloadPage)
+
+        # waits for the new rollover download
+        resultsWait = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "rolloverdownload"))
+        )
+
+        # clicks marked items button
+        rolloverdownload = driver.find_element_by_class_name("rolloverdownload")
+        rolloverdownload.click()
+
+
+
         df = pd.DataFrame(list(zip(title_list, description_list, category_list, keyword_list, link_list)),
-                          columns=['Title', 'Description', 'Category', 'Keyword', "link"])
+                          columns=['Title','Description','Category','Keyword',"link"])
 
         df.to_csv('selenium-output.csv', index=False)
+
+
 
 
 
@@ -131,7 +162,7 @@ def selenium_login():
 def collectResults(driver, keyword):
     # waits for the presence of the Ul item  on new results page
     resultsWait = WebDriverWait(driver, 30).until(
-        EC.presence_of_element_located((By.XPATH, "/html/body/div[4]/div[3]/form/ul[1]"))
+        EC.presence_of_element_located((By.CLASS_NAME, "resultsListBox"))
     )
 
     # grabs list item search results
@@ -152,15 +183,10 @@ def collectResults(driver, keyword):
         keyword_list.append(keyword)
         link_list.append(link)
 
+        markItem = result.find_element_by_class_name("markItem")
+        markItem.click()
 
-    # waits for the presence of the mark all button on new results page
-    markerWait = WebDriverWait(driver, 30).until(
-        EC.presence_of_element_located((By.XPATH, "//*[@id='iteratorBar-selectAll_1']"))
-    )
 
-    # checks the mark all button
-    #markAll = driver.find_element_by_xpath("//*[@id='iteratorBar-selectAll_1']")
-    #markAll.click()
 
 
 
@@ -175,7 +201,7 @@ def groupResults():
 
 def main():
     selenium_login()
-    groupResults()
+    #groupResults()
 
 
 

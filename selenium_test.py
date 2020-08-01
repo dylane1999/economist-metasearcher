@@ -7,10 +7,14 @@ from selenium.webdriver.support.ui import Select
 import pandas as pd
 
 KEYWORDS_FILE = 'textfile.txt'
+RANKED_OUTPUT_FILE = 'Output.csv'
+
 
 title_list = []
 description_list = []
 category_list = []
+keyword_list = []
+link_list = []
 
 def read_keywords():
     with open(KEYWORDS_FILE) as fd:
@@ -92,35 +96,39 @@ def selenium_login():
         searchSubmit.click()
 
         #calls collect results on search results
-        collectResults(driver)
+        collectResults(driver, keyword)
+        enabledButton = driver.find_elements(By.XPATH, '//*[@title="Next"]')
+        hasNextPage = False
+        if len(enabledButton) > 0:
+            hasNextPage = True
 
-        hasNextPage = True
         while hasNextPage:
             disabledButton = driver.find_elements(By.XPATH, "/html/body/div[4]/div[3]/form/div[3]/div/ul[2]/b")
             enabledButton = driver.find_elements(By.XPATH, '//*[@title="Next"]')
             print("Length of enabled button" +  str(len(enabledButton)))
             print("Length of diabled button" +  str(len(disabledButton)))
 
-
             if len(enabledButton) > 0:
                 enabledButton[0].click()
-                collectResults(driver)
+                collectResults(driver, keyword)
                 hasNextPage = True
             elif len(disabledButton) > 0:
-                collectResults(driver)
+                collectResults(driver,keyword)
                 break
 
-        df = pd.DataFrame(list(zip(title_list, description_list, category_list)),
-                          columns=['Title', 'Description', 'Category'])
+        df = pd.DataFrame(list(zip(title_list, description_list, category_list, keyword_list, link_list)),
+                          columns=['Title', 'Description', 'Category', 'Keyword', "link"])
 
-        df.to_csv('Output.csv', index=False)
-
-
+        df.to_csv('selenium-output.csv', index=False)
 
 
 
 
-def collectResults(driver):
+
+
+
+
+def collectResults(driver, keyword):
     # waits for the presence of the Ul item  on new results page
     resultsWait = WebDriverWait(driver, 30).until(
         EC.presence_of_element_located((By.XPATH, "/html/body/div[4]/div[3]/form/ul[1]"))
@@ -134,11 +142,15 @@ def collectResults(driver):
         title = result.find_element_by_class_name("articleTitle").text
         description = result.find_element_by_class_name("description").text
         category = result.find_element_by_class_name("articleType").text
+        link = result.find_element_by_class_name("articleTitle").find_element_by_css_selector('a').get_attribute('href')
+
+
 
         title_list.append(title)
         description_list.append(description)
         category_list.append(category)
-
+        keyword_list.append(keyword)
+        link_list.append(link)
 
 
     # waits for the presence of the mark all button on new results page
@@ -154,17 +166,17 @@ def collectResults(driver):
 
 
 
-
-
-
-
-
-
-
+def groupResults():
+    df = pd.read_csv('selenium-output.csv', delimiter='|', sep='\s+')
+    df.columns = df.columns.str.strip()
+    out = df.astype(str).groupby(['Title']).agg(', '.join)
+    out.to_csv('file.csv')
 
 
 def main():
     selenium_login()
+    groupResults()
+
 
 
 if __name__ == "__main__":

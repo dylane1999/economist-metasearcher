@@ -14,13 +14,16 @@ END_YEAR = "1971"
 
 
 class resultLists:
-    title_list = []
-    description_list = []
-    category_list = []
-    keyword_list = []
-    link_list = []
+    def __init__(self, title, description, category, keyword, link ):
+        self.title = title
+        self.description = description
+        self.category = category
+        self.keyword = keyword
+        self.link = link
 
-lists = resultLists()
+
+allResults = []
+
 
 
 
@@ -145,7 +148,21 @@ def economist_scraper(keyword, startyear, endyear):
 
     driver.switch_to.window(currentWindow)
 
-    df = pd.DataFrame(list(zip(lists.title_list, lists.description_list, lists.category_list, lists.keyword_list, lists.link_list)),
+    title_list = []
+    description_list = []
+    category_list = []
+    keyword_list = []
+    link_list = []
+
+    for obj in allResults:
+        title_list.append(obj.title)
+        description_list.append(obj.description)
+        category_list.append(obj.category)
+        keyword_list.append(obj.keyword)
+        link_list.append(obj.link)
+
+
+    df = pd.DataFrame(list(zip(title_list, description_list, category_list, keyword_list, link_list)),
                       columns=['Title', 'Description', 'Category', 'Keyword', "link"])
 
     df.to_csv('selenium-output.csv', index=True)
@@ -175,25 +192,21 @@ def collectResults(driver, keyword):
         description = result.find_element_by_class_name("description").text
         category = result.find_element_by_class_name("articleType").text
         link = result.find_element_by_class_name("articleTitle").find_element_by_css_selector('a').get_attribute('href')
-
-
-
-
-
-
-
-
-        lists.link_list.append(link)
-        lists.title_list.append(title)
-        lists.description_list.append(description)
-        lists.category_list.append(category)
-        lists.keyword_list.append(keyword)
-
-
         markItem = result.find_element_by_class_name("markItem")
         markItem.click()
+        allResults.append(resultLists(title, description, category, keyword, link))
 
-    return lists
+        #return
+
+        #lists.link_list.append(link)
+       # lists.title_list.append(title)
+       # lists.description_list.append(description)
+       # lists.category_list.append(category)
+      #  lists.keyword_list.append(keyword)
+
+
+
+
 
 
 

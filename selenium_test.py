@@ -148,7 +148,7 @@ def economist_scraper(keyword, startyear, endyear):
     df = pd.DataFrame(list(zip(lists.title_list, lists.description_list, lists.category_list, lists.keyword_list, lists.link_list)),
                       columns=['Title', 'Description', 'Category', 'Keyword', "link"])
 
-    df.to_csv('selenium-output.csv', index=False)
+    df.to_csv('selenium-output.csv', index=True)
 
 
 
@@ -204,7 +204,10 @@ def groupResults():
     df = pd.read_csv('selenium-output.csv', usecols=['Title','Description','Category','Keyword',"link"])
     #print(df)
     #df.columns = df.columns.str.strip()
+    df['length'] = df['Keyword'].str.len()
     out = df.astype(str).groupby(['Title']).agg(', '.join)
+    out.sort_values('length', ascending=False, inplace=True)
+
     out.to_csv('output.csv')
 
 

@@ -13,11 +13,16 @@ START_YEAR = "1917"
 END_YEAR = "1971"
 
 
-title_list = []
-description_list = []
-category_list = []
-keyword_list = []
-link_list = []
+class resultLists:
+    title_list = []
+    description_list = []
+    category_list = []
+    keyword_list = []
+    link_list = []
+
+lists = resultLists()
+
+
 
 def read_keywords():
     with open(KEYWORDS_FILE) as fd:
@@ -140,7 +145,7 @@ def economist_scraper(keyword, startyear, endyear):
 
     driver.switch_to.window(currentWindow)
 
-    df = pd.DataFrame(list(zip(title_list, description_list, category_list, keyword_list, link_list)),
+    df = pd.DataFrame(list(zip(lists.title_list, lists.description_list, lists.category_list, lists.keyword_list, lists.link_list)),
                       columns=['Title', 'Description', 'Category', 'Keyword', "link"])
 
     df.to_csv('selenium-output.csv', index=False)
@@ -173,17 +178,22 @@ def collectResults(driver, keyword):
 
 
 
-        title_list.append(title)
-        description_list.append(description)
-        category_list.append(category)
-        keyword_list.append(keyword)
-        link_list.append(link)
 
+
+
+
+
+        lists.link_list.append(link)
+        lists.title_list.append(title)
+        lists.description_list.append(description)
+        lists.category_list.append(category)
+        lists.keyword_list.append(keyword)
 
 
         markItem = result.find_element_by_class_name("markItem")
         markItem.click()
 
+    return lists
 
 
 

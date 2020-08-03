@@ -87,9 +87,10 @@ def scrape_economist(keyword):
     # calls collect results on search results
     collectResults(driver, keyword, allResults)
     enabledButton = driver.find_elements(By.XPATH, '//*[@title="Next"]')
-    hasNextPage = False
-    if len(enabledButton) > 0:
-        hasNextPage = True
+   # hasNextPage = False
+   # if len(enabledButton) > 0:
+   #     hasNextPage = True
+    hasNextPage = len(enabledButton) > 0
 
     while hasNextPage:
         disabledButton = driver.find_elements(By.XPATH, "/html/body/div[4]/div[3]/form/div[3]/div/ul[2]/b")
@@ -99,10 +100,10 @@ def scrape_economist(keyword):
 
         if len(enabledButton) > 0:
             enabledButton[0].click()
-            collectResults(driver, keyword, allResults)
+            print(collectResults(driver, keyword, allResults))
             hasNextPage = True
         elif len(disabledButton) > 0:
-            collectResults(driver, keyword, allResults)
+            print(collectResults(driver, keyword, allResults))
             break
 
     download(driver)
@@ -122,6 +123,7 @@ def scrape_economist(keyword):
         link_list.append(obj.link)
 
     groupResults(title_list, description_list, category_list, keyword_list, link_list)
+    #This is the line that causes the files to be overwritten
 
 
 
@@ -155,7 +157,9 @@ def collectResults(driver, keyword, allResults):
         time.sleep(.3)
         markItem = result.find_element_by_class_name("markItem")
         markItem.click()
+        print(Articles(title, description, category, keyword, link))
         allResults.append(Articles(title, description, category, keyword, link))
+
 
     return allResults
 
@@ -253,6 +257,11 @@ def groupResults(title_list, description_list, category_list, keyword_list, link
     #df = pd.read_csv('selenium-output.csv', usecols=['Title','Description','Category','Keyword',"link"])
     #print(df)
     #df.columns = df.columns.str.strip()
+    print(title_list)
+    print(description_list)
+    print(category_list)
+    print(keyword_list)
+    print(link_list)
     df = pd.DataFrame(list(zip(title_list, description_list, category_list, keyword_list, link_list)),
                       columns=['Title', 'Description', 'Category', 'Keyword', "Link"])
     df['length'] = df['Keyword'].str.len()

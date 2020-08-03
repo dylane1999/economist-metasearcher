@@ -52,8 +52,7 @@ def read_keywords():
         return [keyword.strip() for keyword in fd.readlines()]
 
 
-def scrape_economist(keyword):
-    allResults = []
+def scrape_economist(keyword, allResults):
 
     path = os.getcwd() + "/geckodriver"
     driver = webdriver.Firefox(executable_path=path)
@@ -109,21 +108,6 @@ def scrape_economist(keyword):
     download(driver)
 
 
-    title_list = []
-    description_list = []
-    category_list = []
-    keyword_list = []
-    link_list = []
-
-    for obj in allResults:
-        title_list.append(obj.title)
-        description_list.append(obj.description)
-        category_list.append(obj.category)
-        keyword_list.append(obj.keyword)
-        link_list.append(obj.link)
-
-    groupResults(title_list, description_list, category_list, keyword_list, link_list)
-    #This is the line that causes the files to be overwritten
 
 
 
@@ -253,10 +237,28 @@ def download(driver):
 
 
 
-def groupResults(title_list, description_list, category_list, keyword_list, link_list):
+def groupResults(allResults):
     #df = pd.read_csv('selenium-output.csv', usecols=['Title','Description','Category','Keyword',"link"])
     #print(df)
     #df.columns = df.columns.str.strip()
+
+    title_list = []
+    description_list = []
+    category_list = []
+    keyword_list = []
+    link_list = []
+
+    for obj in allResults:
+        title_list.append(obj.title)
+        description_list.append(obj.description)
+        category_list.append(obj.category)
+        keyword_list.append(obj.keyword)
+        link_list.append(obj.link)
+
+    #groupResults(title_list, description_list, category_list, keyword_list, link_list)
+    #This is the line that causes the files to be overwritten
+
+
     print(title_list)
     print(description_list)
     print(category_list)
@@ -273,8 +275,11 @@ def groupResults(title_list, description_list, category_list, keyword_list, link
 
 
 def main():
+    allResults = []
     for keyword in read_keywords():
-        scrape_economist(keyword)
+        scrape_economist(keyword,allResults)
+    groupResults(allResults)
+
 
 
 

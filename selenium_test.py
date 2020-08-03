@@ -100,7 +100,10 @@ def scrape_economist(keyword, allResults):
             collectResults(driver, keyword, allResults)
             break
 
-    download(driver)
+
+
+
+   # download(driver)
 
 
 
@@ -123,9 +126,9 @@ def collectResults(driver, keyword, allResults):
         EC.presence_of_element_located((By.CLASS_NAME, "resultsListBox"))
     )
 
+
     # grabs list item search results
     resultItems = driver.find_elements_by_class_name("resultsListBox")
-
 
     for result in resultItems:
 
@@ -144,13 +147,6 @@ def collectResults(driver, keyword, allResults):
 
     return allResults
 
-        #return
-
-        #lists.link_list.append(link)
-       # lists.title_list.append(title)
-       # lists.description_list.append(description)
-       # lists.category_list.append(category)
-      #  lists.keyword_list.append(keyword)
 
 def searchForm(driver, keyword, startyear=START_YEAR, endyear=END_YEAR):
 
@@ -233,9 +229,59 @@ def download(driver):
     driver.switch_to.window(currentWindow)
 
 
+def downloadResults(driver):
+
+    rangeWait = WebDriverWait(driver, 30).until(
+        EC.presence_of_element_located((By.XPATH, "//*[@id='page-range']"))
+    )
+
+    pageRange = driver.find_element_by_xpath("//*[@id='page-range']").text
+
+    if pageRange == ("1 - 1 /"):
+        pageRange = '1'
+    pageRange = pageRange.replace('/','')
+    pageRange = pageRange.strip()
+    pageRange = pageRange.replace(' ','')
+
+
+    downloadButton = driver.find_element_by_xpath("//*[@id='download']")
+    downloadButton.click()
+
+    currentWindow = driver.current_window_handle
+    downloadPage = driver.window_handles[1]
+    driver.switch_to.window(downloadPage)
+
+    rangeWait = WebDriverWait(driver, 30).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "viewPrint"))
+    )
+    time.sleep(1)
+
+
+    # selects save radio button
+    saveOption = driver.find_element_by_class_name("viewPrint")
+    saveOption.click()
+    time.sleep(1)
+
+
+    # inputs page range
+    pageRangeInput = driver.find_element_by_name("pageRange")
+    pageRangeInput.clear()
+    pageRangeInput.send_keys(pageRange)
+    time.sleep(1)
+
+
+    saveButton = driver.find_element_by_xpath("/html/body/form/div/div/p[2]/a[1]")
+    saveButton.click()
+    time.sleep(1)
+
+
+    driver.switch_to.window(currentWindow)
+
+
+
+
 
 def groupResults(allResults):
-
     df = pd.DataFrame.from_records([result.to_dict() for result in allResults])
 
     df['length'] = df['Keyword'].str.len()
@@ -246,11 +292,72 @@ def groupResults(allResults):
 
 
 
+
+def saveArticles(keyword):
+    path = os.getcwd() + "/geckodriver"
+    driver = webdriver.Firefox(executable_path=path)
+    driver.get("http://www.economist.com/historicalarchive")
+
+    # tests to make sure we are on login page
+    assert "Economist" in driver.title
+
+    email, loginPassword = read_login_info()
+
+    # inputs username
+    username = driver.find_element_by_name("email")
+    username.clear()
+    username.send_keys(email)
+
+    # inputs passwords
+    password = driver.find_element_by_name("password")
+    password.clear()
+    password.send_keys(loginPassword)
+
+    # clicks log in button
+    logIn = driver.find_element_by_xpath("/html/body/form/div[2]/table/tbody/tr[5]/td[2]/a")
+    logIn.click()
+    searchForm(driver, keyword)
+
+
+
+    time.sleep(1)
+    resultsWait = WebDriverWait(driver, 30).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "resultsListBox"))
+    )
+
+    titleLink = driver.find_element_by_class_name("articleTitle")
+    titleLink.click()
+
+    downloadResults(driver)
+
+    enabledButton = driver.find_elements(By.XPATH, '//*[@title="Next"]')
+    hasNextPage = len(enabledButton) > 0
+
+    while hasNextPage:
+        disabledButton = driver.find_elements(By.XPATH, "/html/body/div[4]/div[3]/form/div[3]/div/ul[2]/b")
+        enabledButton = driver.find_elements(By.XPATH, '//*[@title="Next"]')
+
+        if len(enabledButton) > 0:
+            enabledButton[0].click()
+            downloadResults(driver)
+            hasNextPage = True
+        elif len(disabledButton) > 0:
+            downloadResults(driver)
+            break
+
+    #download(driver)
+
+
+
+
 def main():
     allResults = []
     for keyword in read_keywords():
         scrape_economist(keyword,allResults)
     groupResults(allResults)
+    for keyword in read_keywords():
+        saveArticles(keyword)
+
 
 
 

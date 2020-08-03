@@ -20,20 +20,20 @@ END_YEAR = "1971"
 
 
 class Articles:
-    def __init__(self, title, description, category, keyword, link ):
-        self.title = title
-        self.description = description
-        self.category = category
-        self.keyword = keyword
-        self.link = link
+    def __init__(self, Title, Description, Category, Keyword, Link ):
+        self.Title = Title
+        self.Description = Description
+        self.Category = Category
+        self.Keyword = Keyword
+        self.Link = Link
 
     def to_dict(self):
         return {
-            'Title': self.title,
-            'Description': self.description,
-            'Category': self.category,
-            'Keyword': self.keyword,
-            'Link': self.link,
+            'Title': self.Title,
+            'Description': self.Description,
+            'Category': self.Category,
+            'Keyword': self.Keyword,
+            'Link': self.Link,
 
         }
 
@@ -54,6 +54,7 @@ def read_keywords():
 
 def scrape_economist(keyword, allResults):
 
+
     path = os.getcwd() + "/geckodriver"
     driver = webdriver.Firefox(executable_path=path)
     driver.get("http://www.economist.com/historicalarchive")
@@ -61,9 +62,7 @@ def scrape_economist(keyword, allResults):
     # tests to make sure we are on login page
     assert "Economist" in driver.title
 
-    loginInfo = read_login_info()
-    email = loginInfo[0]
-    loginPassword = loginInfo[1]
+    email, loginPassword = read_login_info()
 
     # inputs username
     username = driver.find_element_by_name("email")
@@ -86,23 +85,19 @@ def scrape_economist(keyword, allResults):
     # calls collect results on search results
     collectResults(driver, keyword, allResults)
     enabledButton = driver.find_elements(By.XPATH, '//*[@title="Next"]')
-   # hasNextPage = False
-   # if len(enabledButton) > 0:
-   #     hasNextPage = True
     hasNextPage = len(enabledButton) > 0
 
     while hasNextPage:
         disabledButton = driver.find_elements(By.XPATH, "/html/body/div[4]/div[3]/form/div[3]/div/ul[2]/b")
         enabledButton = driver.find_elements(By.XPATH, '//*[@title="Next"]')
-        print("Length of enabled button" + str(len(enabledButton)))
-        print("Length of diabled button" + str(len(disabledButton)))
+
 
         if len(enabledButton) > 0:
             enabledButton[0].click()
-            print(collectResults(driver, keyword, allResults))
+            collectResults(driver, keyword, allResults)
             hasNextPage = True
         elif len(disabledButton) > 0:
-            print(collectResults(driver, keyword, allResults))
+            collectResults(driver, keyword, allResults)
             break
 
     download(driver)
@@ -138,10 +133,12 @@ def collectResults(driver, keyword, allResults):
         description = result.find_element_by_class_name("description").text
         category = result.find_element_by_class_name("articleType").text
         link = result.find_element_by_class_name("articleTitle").find_element_by_css_selector('a').get_attribute('href')
-        time.sleep(.3)
+        #time.sleep(.1)
+        titleWait = WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "articleTitle"))
+        )
         markItem = result.find_element_by_class_name("markItem")
         markItem.click()
-        print(Articles(title, description, category, keyword, link))
         allResults.append(Articles(title, description, category, keyword, link))
 
 
@@ -207,7 +204,7 @@ def searchForm(driver, keyword, startyear=START_YEAR, endyear=END_YEAR):
 
 
 def download(driver):
-    # waits for the new rollover download
+    # waits for the marked all menu item
     markedWait = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, "markListSpan"))
     )
@@ -224,7 +221,7 @@ def download(driver):
     downloadPage = driver.window_handles[1]
     driver.switch_to.window(downloadPage)
 
-    # waits for the new rollover download
+    # waits for the rollover download
     resultsWait = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, "rolloverdownload"))
     )
@@ -238,34 +235,9 @@ def download(driver):
 
 
 def groupResults(allResults):
-    #df = pd.read_csv('selenium-output.csv', usecols=['Title','Description','Category','Keyword',"link"])
-    #print(df)
-    #df.columns = df.columns.str.strip()
 
-    title_list = []
-    description_list = []
-    category_list = []
-    keyword_list = []
-    link_list = []
+    df = pd.DataFrame.from_records([result.to_dict() for result in allResults])
 
-    for obj in allResults:
-        title_list.append(obj.title)
-        description_list.append(obj.description)
-        category_list.append(obj.category)
-        keyword_list.append(obj.keyword)
-        link_list.append(obj.link)
-
-    #groupResults(title_list, description_list, category_list, keyword_list, link_list)
-    #This is the line that causes the files to be overwritten
-
-
-    print(title_list)
-    print(description_list)
-    print(category_list)
-    print(keyword_list)
-    print(link_list)
-    df = pd.DataFrame(list(zip(title_list, description_list, category_list, keyword_list, link_list)),
-                      columns=['Title', 'Description', 'Category', 'Keyword', "Link"])
     df['length'] = df['Keyword'].str.len()
     out = df.astype(str).groupby(['Title']).agg(', '.join)
     out.sort_values('length', ascending=False, inplace=True)

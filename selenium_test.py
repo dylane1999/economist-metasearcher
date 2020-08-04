@@ -55,8 +55,7 @@ def read_keywords():
 def scrape_economist(keyword, allResults):
 
 
-    path = os.getcwd() + "/geckodriver"
-    driver = webdriver.Firefox(executable_path=path)
+    driver = webdriver.Firefox()
     driver.get("http://www.economist.com/historicalarchive")
 
     # tests to make sure we are on login page
@@ -284,11 +283,24 @@ def downloadResults(driver):
 def groupResults(allResults):
     df = pd.DataFrame.from_records([result.to_dict() for result in allResults])
 
-    df['length'] = df['Keyword'].str.len()
-    out = df.astype(str).groupby(['Title']).agg(', '.join)
-    out.sort_values('length', ascending=False, inplace=True)
+    df['length'] = ""
+    df = df.astype(str).groupby(['Title']).agg(', '.join)
 
-    out.to_csv('output.csv')
+
+    for index, row in df.iterrows():
+        keywords = row['Keyword'].split(", ")
+        row['length'] = len(keywords)
+
+
+    df.sort_values('length', ascending=False, inplace=True)
+
+    df['Description'] = df['Description'].str.split(', ').apply(set).str.join(', ')
+    df['Category'] = df['Category'].str.split(', ').apply(set).str.join(', ')
+    df['Link'] = df['Link'].str.split(', ').apply(set).str.join(', ')
+
+
+
+    df.to_csv('output.csv')
 
 
 
@@ -355,8 +367,8 @@ def main():
     for keyword in read_keywords():
         scrape_economist(keyword,allResults)
     groupResults(allResults)
-    for keyword in read_keywords():
-        saveArticles(keyword)
+   # for keyword in read_keywords():
+    #    saveArticles(keyword)
 
 
 

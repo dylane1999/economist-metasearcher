@@ -1,12 +1,14 @@
 # economist-metasearcher
-A script to find Economist articles based on keywords.
+A selenium script to find Economist articles in the historical based on keywords. Returns an output csv with the results collated by keyword 
 
-The Function GetLinks() will take the search terms out of "textfile.txt" and create a list of links to be searched by the scraper.
+Scrape_economist( ) is the function that starts the selenium webdriver, it takes the parameters keyword, a list for all articles allResults, and the start and end years. It also takes the default parameters username and password that are read in from a .txt file. 
 
-The spider is defined in EconomistSpider, and the scrapy API commands:  process.crawl(EconomistSpider) and process.start() are used to run it. 
+This function calls searchForm( ) which contains the info to fill out the query for each keyword
 
-The settings to alter the outputs of the spider are avaliable in the CrawlerProcess settings.
+collectResults( ) is then called on the yield from searchForm( ), and it is tasked with scraping all of the information from the articles for each page in the search query.  
 
-The function Duplicates() goes into the Output file and creates a new dile based upon articles that appear more than once across the search.
 
-IndividualSearches() is used to create a file containing the ranked results for each searh term
+After Scrape_economist( ) is finished, the function groupResults( ) is called which uses pandas to sort the results, and to join and sort them by keyword. 
+
+Next, the function saveArticles( ) is called, which goes into the page for each article in each query, and downloads the article as an html file. 
+
